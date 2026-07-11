@@ -1,0 +1,301 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", "DM Sans", sans-serif;
+
+  /* === PALETTE "AUTOMOTIVE LIGHT" ===
+     Source de vérité : design-system/auto_location/MASTER.md
+     Primary ardoise #1E293B · CTA rouge #DC2626 · fond #F8FAFC · texte #0F172A.
+     Les noms vel-* historiques sont conservés (échelle de profondeur) mais
+     pointent désormais vers des valeurs CLAIRES. */
+  --color-vel-void:        #F8FAFC;  /* fond de page */
+  --color-vel-abyss:       #F1F5F9;  /* bandes / placeholders d'image */
+  --color-vel-deep:        #E8EDF4;  /* creux plus profonds */
+  --color-vel-surface:     #FFFFFF;  /* cartes */
+  --color-vel-elevated:    #FFFFFF;  /* cartes / champs */
+
+  --color-vel-primary:     #1E293B;  /* ardoise premium (titres, nav) */
+  --color-vel-cta:         #DC2626;  /* rouge action (boutons, accents) */
+
+  --color-vel-gold:        #B45309;  /* ambre lisible sur fond clair */
+  --color-vel-gold-light:  #D97706;
+  --color-vel-gold-dark:   #92400E;
+  --color-vel-gold-glow:   rgba(217, 119, 6, 0.12);
+
+  --color-vel-red:         #DC2626;
+  --color-vel-red-dark:    #B91C1C;
+  --color-vel-red-glow:    rgba(220, 38, 38, 0.12);
+
+  /* Texte (ex vel-white/silver, renommés ink/slate) */
+  --color-vel-ink:         #0F172A;  /* texte principal */
+  --color-vel-slate:       #334155;  /* texte secondaire */
+  --color-vel-muted:       #64748B;  /* texte atténué */
+  --color-vel-dim:         #94A3B8;  /* texte discret */
+
+  --color-vel-glass:       #FFFFFF;
+  --color-vel-glass-gold:  rgba(217, 119, 6, 0.08);
+  --color-vel-border:      rgba(15, 23, 42, 0.08);
+  --color-vel-border-gold: rgba(217, 119, 6, 0.3);
+
+  /* Legacy saas vars kept for admin compatibility */
+  --color-saas-primary-start:   #1e3a8a;
+  --color-saas-primary-via:     #1d4ed8;
+  --color-saas-primary-end:     #0891b2;
+  --color-saas-secondary-start: #475569;
+  --color-saas-secondary-end:   #4f46e5;
+  --color-saas-warning-start:   #f59e0b;
+  --color-saas-warning-end:     #ea580c;
+  --color-saas-success-start:   #10b981;
+  --color-saas-success-end:     #0d9488;
+  --color-saas-danger-start:    #ef4444;
+  --color-saas-danger-end:      #e11d48;
+  --color-saas-bg:              #f8fafc;
+  --color-saas-surface:         #ffffff;
+  --color-saas-border:          #e2e8f0;
+  --color-saas-text-main:       #0f172a;
+  --color-saas-text-muted:      #64748b;
+}
+
+/* ── Global ── */
+body {
+  @apply bg-vel-void text-vel-ink antialiased;
+  font-family: var(--font-sans);
+}
+
+.font-display { font-family: var(--font-display); }
+
+/* ── Carte claire (ex "glass" sombre) ── */
+.vel-glass {
+  background: var(--color-vel-surface);
+  border: 1px solid var(--color-vel-border);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05), 0 8px 24px rgba(15, 23, 42, 0.04);
+}
+
+.vel-glass-gold {
+  background: var(--color-vel-glass-gold);
+  border: 1px solid var(--color-vel-border-gold);
+}
+
+/* ── Encart accent (ex glass-cyan) ── */
+.vel-glass-accent {
+  background: rgba(220, 38, 38, 0.04);
+  border: 1px solid rgba(220, 38, 38, 0.14);
+}
+
+/* ── Bouton CTA principal (rouge action) ── */
+.btn-vel-cta {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #FFFFFF;
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  background: linear-gradient(135deg, #DC2626, #B91C1C);
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.25);
+}
+.btn-vel-cta:hover {
+  box-shadow: 0 8px 22px rgba(220, 38, 38, 0.32);
+  transform: translateY(-2px);
+}
+.btn-vel-cta:active { transform: scale(0.97); }
+.btn-vel-cta:focus-visible { outline: 2px solid #B91C1C; outline-offset: 2px; }
+
+/* ── Bouton contour ── */
+.btn-vel-outline-cyan {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #334155;
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  background: #FFFFFF;
+  border: 1px solid rgba(15, 23, 42, 0.14);
+}
+.btn-vel-outline-cyan:hover {
+  border-color: rgba(220, 38, 38, 0.4);
+  color: #DC2626;
+  background: rgba(220, 38, 38, 0.04);
+}
+.btn-vel-outline-cyan:active { transform: scale(0.97); }
+
+/* ── Anciennes classes "glow" neutralisées (pas de néon en mode clair) ── */
+.text-glow-cyan, .text-glow-violet, .text-glow-gold, .text-glow-red { text-shadow: none; }
+
+/* ── Bouton ambre ── */
+.btn-vel-gold {
+  @apply relative overflow-hidden font-display font-bold tracking-wider
+         text-white px-8 py-4 rounded-xl transition-all duration-200
+         active:scale-95 flex items-center justify-center gap-2 cursor-pointer;
+  background: linear-gradient(135deg, #D97706, #B45309);
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.25);
+}
+.btn-vel-gold:hover {
+  box-shadow: 0 8px 22px rgba(217, 119, 6, 0.32);
+  transform: translateY(-2px);
+}
+
+/* ── Bouton rouge (identique au CTA, conservé pour compat) ── */
+.btn-vel-red {
+  @apply relative overflow-hidden font-display font-bold tracking-wider
+         text-white px-8 py-4 rounded-xl transition-all duration-200
+         active:scale-95 flex items-center justify-center gap-2 cursor-pointer;
+  background: linear-gradient(135deg, #DC2626, #B91C1C);
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.25);
+}
+.btn-vel-red:hover {
+  box-shadow: 0 8px 22px rgba(220, 38, 38, 0.32);
+  transform: translateY(-2px);
+}
+
+/* ── Bouton fantôme ── */
+.btn-vel-ghost {
+  @apply relative overflow-hidden font-display font-bold tracking-wider
+         text-vel-slate px-8 py-4 rounded-xl transition-all duration-200
+         active:scale-95 flex items-center justify-center gap-2 cursor-pointer;
+  background: #FFFFFF;
+  border: 1px solid var(--color-vel-border);
+}
+.btn-vel-ghost:hover {
+  border-color: rgba(220, 38, 38, 0.35);
+  color: var(--color-vel-cta);
+  background: rgba(220, 38, 38, 0.03);
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #F1F5F9; }
+::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+/* ── RTL Support ── */
+[dir="rtl"] { font-family: 'Noto Sans Arabic', sans-serif; }
+
+/* ── Admin area: keep white bg ── */
+.admin-surface {
+  background: var(--color-saas-bg) !important;
+  color: var(--color-saas-text-main) !important;
+}
+
+/* ── Existing admin button classes ── */
+@layer components {
+  .btn-saas-primary {
+    @apply relative overflow-hidden rounded-xl px-6 py-3 font-semibold transition-all duration-300
+           text-white shadow-md active:scale-95 flex items-center justify-center gap-2
+           hover:shadow-xl hover:scale-[1.03] hover:-translate-y-0.5
+           bg-linear-to-r from-saas-primary-start via-saas-primary-via to-saas-primary-end;
+  }
+  .btn-saas-secondary {
+    @apply relative overflow-hidden rounded-xl px-6 py-3 font-semibold transition-all duration-300
+           text-white shadow-md active:scale-95 flex items-center justify-center gap-2
+           hover:shadow-xl hover:scale-[1.03] hover:-translate-y-0.5
+           bg-linear-to-r from-saas-secondary-start to-saas-secondary-end;
+  }
+  .btn-saas-warning {
+    @apply relative overflow-hidden rounded-xl px-6 py-3 font-semibold transition-all duration-300
+           text-white shadow-md active:scale-95 flex items-center justify-center gap-2
+           hover:shadow-xl hover:scale-[1.03] hover:-translate-y-0.5
+           bg-linear-to-r from-saas-warning-start to-saas-warning-end;
+  }
+  .btn-saas-success {
+    @apply relative overflow-hidden rounded-xl px-6 py-3 font-semibold transition-all duration-300
+           text-white shadow-md active:scale-95 flex items-center justify-center gap-2
+           hover:shadow-xl hover:scale-[1.03] hover:-translate-y-0.5
+           bg-linear-to-r from-saas-success-start to-saas-success-end;
+  }
+  .btn-saas-danger {
+    @apply relative overflow-hidden rounded-xl px-6 py-3 font-semibold transition-all duration-300
+           text-white shadow-md active:scale-95 flex items-center justify-center gap-2
+           hover:shadow-xl hover:scale-[1.03] hover:-translate-y-0.5
+           bg-linear-to-r from-saas-danger-start to-saas-danger-end;
+  }
+  .btn-saas-danger:hover { animation: shake 0.2s ease-in-out infinite; }
+  .btn-saas-outline {
+    @apply relative overflow-hidden rounded-xl px-6 py-3 font-semibold transition-all duration-300
+           bg-transparent text-saas-text-main border border-saas-border
+           hover:border-saas-primary-via hover:bg-saas-bg active:scale-95;
+  }
+  .glass-card {
+    @apply bg-white border border-saas-border rounded-2xl shadow-sm hover:shadow-md transition-shadow;
+  }
+  .input-saas {
+    @apply w-full bg-white border border-saas-border rounded-xl px-4 py-2.5 outline-none
+           focus:ring-2 focus:ring-saas-primary-via/10 focus:border-saas-primary-via transition-all duration-200
+           text-saas-text-main font-medium placeholder:text-saas-text-muted;
+  }
+  .label-saas {
+    @apply text-xs font-semibold text-saas-text-muted mb-1.5 block;
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0) scale(1.03); }
+  25% { transform: translateX(-2px) scale(1.03); }
+  75% { transform: translateX(2px) scale(1.03); }
+}
+
+.animate-shake { animation: shake 0.2s ease-in-out infinite; }
+
+.custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 10px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #CBD5E1; }
+
+/* ── Calendrier du wizard de réservation (react-day-picker, thème clair) ── */
+.wizard-calendar .rdp-root {
+  --rdp-accent-color: #DC2626;
+  --rdp-accent-background-color: rgba(220, 38, 38, 0.10);
+  --rdp-day-height: 42px;
+  --rdp-day-width: 42px;
+  --rdp-day_button-border-radius: 10px;
+  --rdp-today-color: #DC2626;
+  --rdp-selected-border: 2px solid #DC2626;
+  --rdp-range_start-color: #FFFFFF;
+  --rdp-range_end-color: #FFFFFF;
+  --rdp-range_start-background: linear-gradient(135deg, #DC2626, #B91C1C);
+  --rdp-range_end-background: linear-gradient(135deg, #DC2626, #B91C1C);
+  color: #334155;
+  font-family: var(--font-sans);
+}
+.wizard-calendar .rdp-month_caption,
+.wizard-calendar .rdp-caption_label {
+  color: #0F172A;
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+.wizard-calendar .rdp-weekday { color: #94A3B8; font-size: 11px; }
+.wizard-calendar .rdp-chevron { fill: #DC2626; }
+.wizard-calendar .rdp-day_button { cursor: pointer; transition: background 0.15s ease; }
+.wizard-calendar .rdp-day:not(.rdp-disabled) .rdp-day_button:hover {
+  background: rgba(220, 38, 38, 0.08);
+}
+.wizard-calendar .rdp-disabled { opacity: 0.4; }
+.wizard-calendar .rdp-disabled .rdp-day_button { cursor: not-allowed; text-decoration: line-through; }
+/* Jours déjà réservés : rouge, distinct du simple passé */
+.wizard-calendar .wizard-day-blocked { opacity: 1; }
+.wizard-calendar .wizard-day-blocked .rdp-day_button {
+  background: rgba(220, 38, 38, 0.10);
+  color: rgba(185, 28, 28, 0.75);
+  text-decoration: line-through;
+  cursor: not-allowed;
+}
+/* Plage survolée entre le 1er et le 2e clic */
+.wizard-calendar .wizard-day-preview:not(.rdp-selected):not(.wizard-day-blocked) .rdp-day_button {
+  background: rgba(220, 38, 38, 0.07);
+  border-radius: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .wizard-calendar .rdp-day_button { transition: none; }
+}

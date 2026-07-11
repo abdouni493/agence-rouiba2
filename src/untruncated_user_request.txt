@@ -1,0 +1,19 @@
+<USER_REQUEST>
+i have runed this sql code for the supabase shema database : 
+-- =====================================================================
+-- AutoLocation — Supabase migration for new project
+-- Project URL: https://plukclcsxixcxfpaccao.supabase.co
+-- =====================================================================
+-- Run this in the Supabase SQL editor (or via `supabase db push`) on the
+-- NEW project BEFORE pointing the frontend .env at it.
+--
+-- ADAPT BEFORE RUNNING:
+--   - Section 0 assumes your existing reservation table is `reservations`
+--     and your expense tables are `vehicle_expenses` and `store_expenses`.
+--     Check your actual table names first and rename in the ALTER TABLE
+--     statements if different.
+-- =====================================================================
+
+-- ---------------------------------------------------------------------
+-- 0. Add created_by tracking to existing operational tables
+<truncated 32924 bytes>
