@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X } from 'lucide-react';
 import { DatabaseService } from '../services/DatabaseService';
 import { supabase } from '../supabase';
+import { sessionService } from '../utils/sessionService';
 
 interface ConfigPageProps {
   lang: Language;
@@ -110,6 +111,168 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ lang, user }) => {
   const handleSecurityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setSecurityData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [savingSecurity, setSavingSecurity] = useState(false);
+
+  // Save the profile (display name). Updates both the auth user metadata (when a
+  // real Supabase session is available) and the HR workers row.
+  const handleSaveProfile = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (savingProfile) return;
+
+    const name = profileData.name?.trim();
+    if (!name) {
+      setNotification({ type: 'error', message: lang === 'fr' ? 'Le nom ne peut pas être vide.' : 'لا يمكن أن يكون الاسم فارغًا.' });
+      setTimeout(() => setNotification(null), 4000);
+      return;
+    }
+
+    setSavingProfile(true);
+    try {
+      // Update the Supabase auth metadata (admin accounts read the name from here).
+      const hasAuth = await sessionService.ensureSupabaseSession();
+      if (hasAuth) {
+        const { error } = await supabase.auth.updateUser({ data: { full_name: name, username: name } });
+        if (error) console.warn('Could not update auth metadata:', error.message);
+      }
+
+      // Update the HR workers row (0 rows for pure-admin accounts — harmless).
+      const { error: wErr } = await supabase
+        .from('workers')
+        .update({ full_name: name })
+        .eq('email', user.email);
+      if (wErr) console.warn('Could not update worker profile:', wErr.message);
+
+      setNotification({ type: 'success', message: lang === 'fr' ? 'Profil mis à jour avec succès!' : 'تم تحديث الملف بنجاح!' });
+      setTimeout(() => setNotification(null), 4000);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      setNotification({ type: 'error', message: lang === 'fr' ? 'Erreur lors de la mise à jour du profil' : 'خطأ في تحديث الملف' });
+      setTimeout(() => setNotification(null), 4000);
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  // Save the login credentials (username / email / password). This is what makes
+  // the change actually take effect on the login page.
+  const handleSaveSecurity = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (savingSecurity) return;
+
+    const currentEmail = user.email;
+    const newEmail = securityData.email.trim();
+    const newUsername = securityData.username.trim();
+    const wantsPassword = securityData.newPassword.length > 0;
+
+    // Validate
+    if (newEmail && !newEmail.includes('@')) {
+      setNotification({ type: 'error', message: lang === 'fr' ? 'Adresse email invalide.' : 'البريد الإلكتروني غير صالح.' });
+      setTimeout(() => setNotification(null), 4000);
+      return;
+    }
+    if (wantsPassword) {
+      if (securityData.newPassword.length < 6) {
+        setNotification({ type: 'error', message: lang === 'fr' ? 'Le mot de passe doit contenir au moins 6 caractères.' : 'يجب أن تحتوي كلمة المرور على 6 أحرف على الأقل.' });
+        setTimeout(() => setNotification(null), 4000);
+        return;
+      }
+      if (securityData.newPassword !== securityData.confirmPassword) {
+        setNotification({ type: 'error', message: lang === 'fr' ? 'Les mots de passe ne correspondent pas.' : 'كلمتا المرور غير متطابقتين.' });
+        setTimeout(() => setNotification(null), 4000);
+        return;
+      }
+    }
+
+    const emailChanged = !!newEmail && newEmail.toLowerCase() !== currentEmail.toLowerCase();
+
+    setSavingSecurity(true);
+    try {
+      let emailPending = false;
+      let authUpdated = false;
+
+      // 1) Update the Supabase Auth account (auth.users) — this is the source of
+      //    truth for signInWithPassword logins (admin + auth-backed workers).
+      const hasAuth = await sessionService.ensureSupabaseSession();
+      if (hasAuth) {
+        const authUpdates: { email?: string; password?: string } = {};
+        if (emailChanged) authUpdates.email = newEmail;
+        if (wantsPassword) authUpdates.password = securityData.newPassword;
+
+        if (Object.keys(authUpdates).length > 0) {
+          const { data, error } = await supabase.auth.updateUser(authUpdates);
+          if (error) throw error;
+          authUpdated = true;
+          // Supabase can defer an email change until it is confirmed via a link
+          // emailed to the new address ("secure email change").
+          if (emailChanged && (data?.user as any)?.new_email) emailPending = true;
+        }
+      }
+
+      // 2) Keep the HR workers row + legacy worker-login fallback in sync so a
+      //    worker can log in with the new credentials immediately. Affects
+      //    0 rows for pure-admin accounts, which is fine.
+      let workerRowsUpdated = 0;
+      const workerUpdates: Record<string, any> = {};
+      if (newUsername) workerUpdates.username = newUsername;
+      if (emailChanged) workerUpdates.email = newEmail;
+      if (wantsPassword) workerUpdates.password = securityData.newPassword;
+      if (Object.keys(workerUpdates).length > 0) {
+        const { data: wData, error: wErr } = await supabase
+          .from('workers')
+          .update(workerUpdates)
+          .eq('email', currentEmail)
+          .select('id');
+        if (wErr) console.warn('Could not update worker credentials:', wErr.message);
+        workerRowsUpdated = wData?.length || 0;
+      }
+
+      // If a credential change was requested but we could apply it to NEITHER the
+      // auth account NOR a workers row, nothing actually changed — tell the user
+      // honestly instead of showing a misleading success.
+      if ((emailChanged || wantsPassword) && !authUpdated && workerRowsUpdated === 0) {
+        setNotification({
+          type: 'error',
+          message: lang === 'fr'
+            ? 'Impossible de mettre à jour les identifiants. Reconnectez-vous puis réessayez.'
+            : 'تعذر تحديث بيانات الدخول. أعد تسجيل الدخول ثم حاول مجددًا.',
+        });
+        setTimeout(() => setNotification(null), 5000);
+        setSavingSecurity(false);
+        return;
+      }
+
+      // Clear the password fields; reflect the new email unless it is pending.
+      setSecurityData(prev => ({
+        ...prev,
+        newPassword: '',
+        confirmPassword: '',
+        email: emailPending ? currentEmail : (newEmail || prev.email),
+      }));
+
+      let message = lang === 'fr'
+        ? 'Informations de connexion mises à jour ! Utilisez-les à la prochaine connexion.'
+        : 'تم تحديث معلومات تسجيل الدخول! استخدمها في تسجيل الدخول التالي.';
+      if (emailPending) {
+        message = lang === 'fr'
+          ? "Mot de passe mis à jour. Pour l'email, confirmez le changement via le lien envoyé à votre nouvelle adresse."
+          : 'تم تحديث كلمة المرور. لتغيير البريد، أكد التغيير عبر الرابط المرسل إلى عنوانك الجديد.';
+      }
+      setNotification({ type: 'success', message });
+      setTimeout(() => setNotification(null), 6000);
+    } catch (error: any) {
+      console.error('Error updating security info:', error);
+      const raw = error?.message || '';
+      const friendly = raw.includes('should be different')
+        ? (lang === 'fr' ? 'Le nouveau mot de passe doit être différent de l\'ancien.' : 'يجب أن تكون كلمة المرور الجديدة مختلفة.')
+        : (lang === 'fr' ? `Erreur lors de la mise à jour: ${raw}` : `خطأ في التحديث: ${raw}`);
+      setNotification({ type: 'error', message: friendly });
+      setTimeout(() => setNotification(null), 5000);
+    } finally {
+      setSavingSecurity(false);
+    }
   };
 
   const handleSaveAgencyInfo = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -662,7 +825,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ lang, user }) => {
                   <h2 className="text-2xl font-black uppercase tracking-tighter">👤 {{fr: 'Mon Profil', ar: 'ملفي الشخصي'}[lang]}</h2>
                 </div>
 
-                <form className="p-8 space-y-6" onSubmit={(e) => e.preventDefault()}>
+                <form className="p-8 space-y-6" onSubmit={handleSaveProfile}>
                   {/* Profile Photo */}
                   <div className="space-y-4">
                     <label className="label-saas">📸 {{fr: 'Photo de profil', ar: 'صورة الملف'}[lang]}</label>
@@ -712,9 +875,12 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ lang, user }) => {
                     </button>
                     <button
                       type="submit"
-                      className="flex-1 btn-saas-primary py-3"
+                      disabled={savingProfile}
+                      className="flex-1 btn-saas-primary py-3 disabled:opacity-60"
                     >
-                      {{fr: 'Enregistrer', ar: 'حفظ'}[lang]}
+                      {savingProfile
+                        ? (lang === 'fr' ? 'Enregistrement...' : 'جاري الحفظ...')
+                        : {fr: 'Enregistrer', ar: 'حفظ'}[lang]}
                     </button>
                   </div>
                 </form>
@@ -728,7 +894,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ lang, user }) => {
                   </h2>
                 </div>
 
-                <form className="p-8 space-y-6" onSubmit={(e) => e.preventDefault()}>
+                <form className="p-8 space-y-6" onSubmit={handleSaveSecurity}>
                   {/* Username */}
                   <div className="space-y-2">
                     <label className="label-saas">👤 {{fr: 'Nom d\'utilisateur', ar: 'اسم المستخدم'}[lang]}</label>
@@ -789,9 +955,12 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ lang, user }) => {
                     </button>
                     <button
                       type="submit"
-                      className="flex-1 btn-saas-primary py-3"
+                      disabled={savingSecurity}
+                      className="flex-1 btn-saas-primary py-3 disabled:opacity-60"
                     >
-                      {{fr: 'Mettre à jour', ar: 'تحديث'}[lang]}
+                      {savingSecurity
+                        ? (lang === 'fr' ? 'Mise à jour...' : 'جاري التحديث...')
+                        : {fr: 'Mettre à jour', ar: 'تحديث'}[lang]}
                     </button>
                   </div>
                 </form>

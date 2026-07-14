@@ -241,6 +241,12 @@ export interface VehicleExpense {
   expirationDate?: string;
   expenseName?: string;
   createdAt: string;
+  // Vidange filter-tracking flags (optional: only stored when the DB has the
+  // matching columns — see expenseService / the filter-columns migration).
+  oilFilterChanged?: boolean;
+  airFilterChanged?: boolean;
+  fuelFilterChanged?: boolean;
+  acFilterChanged?: boolean;
 }
 
 export interface ReservationStep1 {

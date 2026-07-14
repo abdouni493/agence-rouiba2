@@ -162,7 +162,10 @@ export const MaintenancePage: React.FC<MaintenancePageProps> = ({
       type: 'vidange',
       date: new Date().toISOString().split('T')[0],
       currentMileage: car.mileage,
-      nextVidangeKm: car.mileage + 10000,
+      // nextVidangeKm is the INTERVAL (km until the next service), not an
+      // absolute odometer value — the modal computes "Prochain" as
+      // currentMileage + nextVidangeKm.
+      nextVidangeKm: 10000,
     };
     setPrefilledExpense(expense);
     setIsExpenseModalOpen(true);
@@ -176,7 +179,7 @@ export const MaintenancePage: React.FC<MaintenancePageProps> = ({
       type: 'chaine',
       date: new Date().toISOString().split('T')[0],
       currentMileage: car.mileage,
-      nextVidangeKm: car.mileage + 10000,
+      nextVidangeKm: 10000,
     };
     setPrefilledExpense(expense);
     setIsExpenseModalOpen(true);
@@ -213,7 +216,9 @@ export const MaintenancePage: React.FC<MaintenancePageProps> = ({
       if (selectedCar) {
         const expense = {
           carId: selectedCar.id,
-          type: selectedExpenseType,
+          // Honour the type the user actually picked inside the modal (they can
+          // switch it) and fall back to the button they clicked.
+          type: expenseData.type || selectedExpenseType,
           cost: expenseData.cost || 0,
           date: expenseData.date || new Date().toISOString().split('T')[0],
           note: expenseData.note || '',

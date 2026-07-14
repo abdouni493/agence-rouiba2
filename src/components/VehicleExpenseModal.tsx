@@ -633,7 +633,9 @@ export const VehicleExpenseModal: React.FC<VehicleExpenseModalProps> = ({
             onClick={handleSubmit}
             className="flex-1 btn-saas-primary py-3"
           >
-            {{fr: expense ? 'Modifier' : 'Ajouter', ar: expense ? 'تعديل' : 'إضافة'}[lang]}
+            {/* Only an expense that already exists in the DB (has an id) is an
+                edit; a prefilled object without an id is a brand-new expense. */}
+            {{fr: expense?.id ? 'Modifier' : 'Ajouter', ar: expense?.id ? 'تعديل' : 'إضافة'}[lang]}
           </button>
         </div>
       </motion.div>
