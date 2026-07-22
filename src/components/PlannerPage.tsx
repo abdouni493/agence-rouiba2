@@ -2800,8 +2800,8 @@ export const PersonalizationModal: React.FC<{
             <p class="contract-title">${labels.contractTitle}</p>
             <div class="agency-contact">
               ${agencySettings?.address ? `<span class="agency-contact-item">${agencySettings.address}</span>` : ''}
-              ${agencySettings?.phone ? `<span class="agency-contact-item"><strong>walid</strong>: ${ltrPhone(agencySettings.phone)}</span>` : ''}
-              ${agencySettings?.phone_number_2 ? `<span class="agency-contact-item"><strong>elias</strong>: ${ltrPhone(agencySettings.phone_number_2)}</span>` : ''}
+              ${agencySettings?.phone ? `<span class="agency-contact-item">📞 ${ltrPhone(agencySettings.phone)}</span>` : ''}
+              ${agencySettings?.phone_number_2 ? `<span class="agency-contact-item">📱 ${ltrPhone(agencySettings.phone_number_2)}</span>` : ''}
               ${agencySettings?.bank_number ? `<span class="agency-contact-item">${isFrench ? 'Compte' : 'الحساب'}: ${agencySettings.bank_number}</span>` : ''}
             </div>
           </div>
